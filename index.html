@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weapon TTK Radar Graphs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            text-align: center;
+        }
+        h1 {
+            margin-top: 20px;
+        }
+        #controls {
+            margin: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .weapon-block {
+            background: #fff;
+            border: 2px solid #333;
+            margin: 10px;
+            padding: 10px;
+            width: 220px;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+        }
+        .weapon-block h3 {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .weapon-block img {
+            width: 80px;
+            margin: 5px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .weapon-block img:hover {
+            transform: scale(1.05);
+        }
+        .selected {
+            border-color: red !important;
+        }
+        .compare-panel {
+            display: none;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px;
+            gap: 10px;
+        }
+        .compare-panel img {
+            max-width: 500px;
+            width: 100%;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>TTK Radar Grahps as of 7-21-25</h1>
+    <h2>All targets were purple shield full health DUMMIEs</h2>
+    <h2>All shots were done to the body</h2>
+    <h2>I recorded everything at 120FPS and search frame by frame for the first frame of damage and last frame of damage and got the time based on those readings, three times per gun and averaged the times for the TTK's you see here</h2>
+    <h2><a href="https://discord.gg/EAkS2Z7PCU" target="_blank">If you have Any questions feel free to join here and ask away!</a></h2>
+
+    <div id="controls">
+        <button id="startCompareBtn">Start Compare Mode</button>
+        <button id="showCompareBtn" disabled>Show Comparison</button>
+        <button id="resetBtn" disabled>Reset</button>
+    </div>
+
+    <div class="compare-panel" id="comparePanel"></div>
+
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        const weapons = [
+            "ttk_radar_Wingman.png", "ttk_radar_30-30.png", "ttk_radar_30-30_charged.png",
+            "ttk_radar_30-30_Charged_Skully.png", "ttk_radar_30-30_Skully.png", "ttk_radar_Alternator.png",
+            "ttk_radar_Bow_fast.png", "ttk_radar_Bow_slow.png", "ttk_radar_CAR.png",
+            "ttk_radar_Charge.png", "ttk_radar_Charge_Sel.png", "ttk_radar_Devotion.png",
+            "ttk_radar_Devotion_T.png", "ttk_radar_Eva.png", "ttk_radar_Flatline.png",
+            "ttk_radar_G7.png", "ttk_radar_Havoc.png", "ttk_radar_Hemlok.png",
+            "ttk_radar_Kraber.png", "ttk_radar_Long_Skully.png", "ttk_radar_Longbow.png",
+            "ttk_radar_L-Star.png", "ttk_radar_Mastiff.png", "ttk_radar_Mozam.png",
+            "ttk_radar_Nemesis.png", "ttk_radar_P2020.png", "ttk_radar_P4040.png",
+            "ttk_radar_PK.png", "ttk_radar_Pr._Auto.png", "ttk_radar_Pr._Burst.png",
+            "ttk_radar_R99.png", "ttk_radar_R301.png", "ttk_radar_Rampage.png",
+            "ttk_radar_Rampage_Ch.png", "ttk_radar_RE45.png", "ttk_radar_Sentinal.png",
+            "ttk_radar_Sentinal_Charged.png", "ttk_radar_Spitfire.png", "ttk_radar_TT.png",
+            "ttk_radar_Twozam.png", "ttk_radar_Volt.png", "ttk_radar_Wing_Skully.png"
+        ];
+
+        const gallery = document.getElementById('gallery');
+        const comparePanel = document.getElementById('comparePanel');
+        const startBtn = document.getElementById('startCompareBtn');
+        const showBtn = document.getElementById('showCompareBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let compareMode = false;
+        let selectedImages = [];
+
+        function toggleSelection(img) {
+            const src = img.getAttribute('data-src');
+            if (selectedImages.includes(src)) {
+                img.classList.remove('selected');
+                selectedImages = selectedImages.filter(s => s !== src);
+            } else {
+                if (selectedImages.length >= 3) {
+                    alert('You can only select up to 3 graphs.');
+                    return;
+                }
+                img.classList.add('selected');
+                selectedImages.push(src);
+            }
+            showBtn.disabled = selectedImages.length === 0;
+            resetBtn.disabled = selectedImages.length === 0;
+        }
+
+        function createWeaponBlock(file) {
+            const block = document.createElement('div');
+            block.className = 'weapon-block';
+
+            const title = document.createElement('h3');
+            title.innerText = file.replace('ttk_radar_', '').replace('.png', '');
+            block.appendChild(title);
+
+            const img = document.createElement('img');
+            img.src = file;
+            img.setAttribute('data-src', file);
+            img.alt = file;
+            img.onclick = () => {
+                if (compareMode) toggleSelection(img);
+                else window.open(img.src, '_blank');
+            };
+            block.appendChild(img);
+
+            gallery.appendChild(block);
+        }
+
+        weapons.forEach(createWeaponBlock);
+
+        startBtn.onclick = () => {
+            compareMode = !compareMode;
+            startBtn.innerText = compareMode ? 'Exit Compare Mode' : 'Start Compare Mode';
+            if (!compareMode) {
+                document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+                selectedImages = [];
+                showBtn.disabled = true;
+                resetBtn.disabled = true;
+            }
+        };
+
+        showBtn.onclick = () => {
+            comparePanel.innerHTML = '';
+            selectedImages.forEach(src => {
+                const img = document.createElement('img');
+                img.src = src;
+                comparePanel.appendChild(img);
+            });
+            comparePanel.style.display = 'flex';
+        };
+
+        resetBtn.onclick = () => {
+            selectedImages = [];
+            document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+            comparePanel.innerHTML = '';
+            comparePanel.style.display = 'none';
+            showBtn.disabled = true;
+            resetBtn.disabled = true;
+        };
+    </script>
+
+</body>
+</html>
